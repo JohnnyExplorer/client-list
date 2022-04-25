@@ -49,7 +49,7 @@ def merge_sales_data(ts):
 
     df_sales = df_join_cust.select(sales_columns)
     df_sales = df_sales.withColumn("isSalesLT",F.lit('true'))
-    df_sales = df_sales.withColumn('Address', df_sales.AddressLine1 + ', ' + df_sales.AddressLine2)
+    df_sales = df_sales.withColumn('Address', F.concat_ws(",",df_sales.AddressLine1, df_sales.AddressLine2))
     df_sales = df_sales.drop('AddressLine1','AddressLine2')
     return df_sales
 

@@ -90,17 +90,17 @@ def process_donation_columns(df):
     phone_df = process_priority(df.select(['contactid','telephone1','telephone2','telephone3']),'phone')
     address_line1_df = process_priority(df.select(['contactid','address1_line1','address2_line1','address3_line1']),'address_line1')
     address_line2_df = process_priority(df.select(['contactid','address1_line2','address2_line2','address3_line2']),'address_line2')
+
+
+    address_df = address_line1_df.join(address_line2_df.alias('line2'), address_line1_df.contactid == address_line2_df.contactid, 'left').drop(F.col('line2.contactid'))
+    # address_df = address_df.na.fill(value='',subset=["address_line1"])
+    address_df = address_df.na.fill(value='',subset=["address_line2"])
+    address_df = address_df.withColumn('address', F.concat_ws(',','address_line1','address_line2')).drop('address_line1','address_line2')
+    address_df.show()
     base_df = df.select(['contactid','jobtitle','firstname','lastname','company','donotphone','createdon'])
 
-
-    address_df = address_line1_df.join(address_line2_df.alias('line2'), address_line1_df.contactid == address_line2_df.contactid).drop(F.col('line2.contactid'))
-    address_df = address_df.na.fill(value='',subset=["address_line1"])
-    address_df = address_df.na.fill(value='',subset=["address_line2"])
-    address_df.show()
-    #address_df = address_df.withColumn('address', (F.col('address_line1') if (F.col('address_line2') == None) else F.concat_ws(",","address_line1",'address_line2')) )
-
     merge_df = base_df.join(email_df.alias('email'), base_df.contactid == email_df.contactid,'left').drop(F.col('email.contactid')) \
-    .join(address_df.alias('address'), base_df.contactid == city_df.contactid,'left').drop(F.col('address.contactid')) \
+    .join(address_df.alias('address'), base_df.contactid == address_df.contactid,'left').drop(F.col('address.contactid')) \
     .join(city_df.alias('city'), base_df.contactid == city_df.contactid,'left').drop(F.col('city.contactid')) \
     .join(state_df.alias('state'), base_df.contactid == state_df.contactid,'left').drop(F.col('state.contactid')) \
     .join(postal_df.alias('postal'), base_df.contactid == postal_df.contactid,'left').drop(F.col('postal.contactid')) \
